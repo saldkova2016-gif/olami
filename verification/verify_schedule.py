@@ -57,10 +57,14 @@ def verify(page):
     print("Waiting for renderer...")
     page.wait_for_selector("#renderer")
 
+    # 10. Switch to A4
+    print("Switching to A4 format...")
+    page.locator("#btn-a4").click()
+
     # Give it a moment to render fonts etc
     time.sleep(1)
 
-    # 10. Screenshot
+    # 11. Screenshot
     print("Taking screenshot...")
     output_path = f"{cwd}/verification/schedule_preview.png"
     page.screenshot(path=output_path, full_page=True)

@@ -111,13 +111,13 @@
                                 </div>
                             </div>
                         </button>
-                        <button onclick="setFormat('landscape')" id="btn-landscape" class="w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left">
+                        <button onclick="setFormat('a4')" id="btn-a4" class="w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left">
                              <div class="flex justify-between items-start">
                                 <div class="flex items-center gap-3">
-                                    <span class="material-icons text-gray-500">crop_landscape</span>
+                                    <span class="material-icons text-gray-500">description</span>
                                     <div>
-                                        <p class="font-medium text-gray-900 dark:text-white">Горизонтальный (16:9)</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">For Screens</p>
+                                        <p class="font-medium text-gray-900 dark:text-white">Формат А4</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Для печати</p>
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@
         }
 
         function updateFormatUI() {
-            ['stories', 'square', 'landscape'].forEach(f => {
+            ['stories', 'square', 'a4'].forEach(f => {
                 const btn = document.getElementById(`btn-${f}`);
                 if (f === currentFormat) {
                     btn.className = "w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left border-2 border-primary bg-primary/5 dark:bg-primary/10";
@@ -183,7 +183,7 @@
             const dims = {
                 square: { w: 1080, h: 1080 },
                 stories: { w: 1080, h: 1920 },
-                landscape: { w: 1920, h: 1080 }
+                a4: { w: 1240, h: 1754 } // A4 @ ~150dpi
             };
             const { w, h } = dims[currentFormat];
 
@@ -253,12 +253,13 @@
                              <span class="font-display font-bold text-3xl tracking-tight">OLAMI MOSCOW</span>
                          </div>
                          <div class="text-sm text-gray-400 text-right leading-tight font-body">
-                             <div class="flex items-center justify-end gap-1 mb-1">
-                                <span class="material-icons text-sm text-green-500">whatsapp</span>
-                                <span>+7(963) 613-3-613</span>
+                             Набережная Академика Туполева 3<br/>
+                             м.Курская, Выход №5
+                             <div class="flex items-center justify-end gap-1 mt-1 mb-1">
+                                <span class="material-icons text-sm text-blue-400">telegram</span>
+                                <span>Доп. информация по Telegram +7(963) 613-3-613</span>
                              </div>
-                             Набережная Академика Туполева 3, м.Курская<br/>
-                             МЕСТНАЯ РЕЛИГИОЗНАЯ ОРГАНИЗАЦИЯ
+                             МЕСТНАЯ РЕЛИГИОЗНАЯ ОРГАНИЗАЦИЯ<br/>ОРТОДОКСАЛЬНОГО ИУДАИЗМА – ОЛАМИ МОСКВА
                          </div>
                      </div>
                 </div>
@@ -269,8 +270,8 @@
 
         function renderLesson(lesson) {
             let avatarHtml = '';
-            const borderClass = 'border-4 border-accent-lime';
-            const borderClassMini = 'border-2 border-accent-lime';
+            const borderClass = 'border-4 border-gray-300';
+            const borderClassMini = 'border-2 border-gray-300';
 
             if (lesson.lecturers.length === 0) {
                 avatarHtml = `<div class="w-20 h-20 rounded-full bg-gray-200 ${borderClass} flex items-center justify-center">
@@ -323,24 +324,41 @@
             `;
         }
 
-        async function downloadPNG() {
+        async function captureRenderer() {
             const renderer = document.getElementById('renderer');
+
+            // Clone the node
+            const clone = renderer.cloneNode(true);
+
+            // Set styles for the clone to ensure it renders at full size off-screen
+            clone.style.position = 'fixed';
+            clone.style.top = '0';
+            clone.style.left = '0';
+            clone.style.zIndex = '-1000';
+            clone.style.transform = 'none'; // Ensure no scaling
+            clone.style.width = renderer.style.width;
+            clone.style.height = renderer.style.height;
+
+            document.body.appendChild(clone);
+
             try {
-                // Temporarily remove scale for clear capture
-                const oldTransform = renderer.style.transform;
-                renderer.style.transform = 'none';
-
-                const canvas = await html2canvas(renderer, {
+                const canvas = await html2canvas(clone, {
                     useCORS: true,
-                    scale: 1,
+                    scale: 1, // 1:1 scale of the unscaled element
                     backgroundColor: '#ffffff',
-                    windowWidth: renderer.scrollWidth,
-                    windowHeight: renderer.scrollHeight
+                    logging: false
                 });
+                document.body.removeChild(clone);
+                return canvas;
+            } catch (e) {
+                document.body.removeChild(clone);
+                throw e;
+            }
+        }
 
-                // Restore preview scale
-                renderer.style.transform = oldTransform;
-
+        async function downloadPNG() {
+            try {
+                const canvas = await captureRenderer();
                 const link = document.createElement('a');
                 link.download = `schedule-${currentFormat}.png`;
                 link.href = canvas.toDataURL();
@@ -352,22 +370,14 @@
         }
 
         async function downloadPDF() {
-            const renderer = document.getElementById('renderer');
             try {
-                const oldTransform = renderer.style.transform;
-                renderer.style.transform = 'none';
-
-                const canvas = await html2canvas(renderer, {
-                    useCORS: true,
-                    scale: 1,
-                    backgroundColor: '#ffffff'
-                });
-
-                renderer.style.transform = oldTransform;
-
+                const canvas = await captureRenderer();
                 const { jsPDF } = window.jspdf;
+
+                // For PDF, we might want consistent size, but sticking to pixel match for now
+                // "p" for portrait (A4/Stories/Square are usually tall or square)
                 const pdf = new jsPDF({
-                    orientation: currentFormat === 'landscape' ? 'l' : 'p',
+                    orientation: 'p',
                     unit: 'px',
                     format: [canvas.width, canvas.height]
                 });
