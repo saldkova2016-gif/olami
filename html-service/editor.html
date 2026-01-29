@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Редактор расписания</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#6B46C1",
+                        secondary: "#D53F8C",
+                        "primary-dark": "#553C9A",
+                        "background-light": "#F7FAFC",
+                        "background-dark": "#1A202C",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#2D3748",
+                        "text-light": "#2D3748",
+                        "text-dark": "#E2E8F0",
+                        "border-light": "#E2E8F0",
+                        "border-dark": "#4A5568",
+                    },
+                    fontFamily: {
+                        display: ["Roboto", "sans-serif"],
+                        body: ["Roboto", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body antialiased min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex-shrink-0 flex items-center gap-2">
+                        <span class="material-icons-outlined text-primary text-3xl">edit_calendar</span>
+                        <h1 class="text-xl font-bold uppercase tracking-wide">Генератор расписания</h1>
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                     <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">A</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 gap-8">
+        <!-- Sidebar -->
+        <aside class="hidden lg:block w-64 flex-shrink-0">
+            <div class="sticky top-24 space-y-8">
+                 <nav aria-label="Progress">
+                    <ol class="overflow-hidden">
+                        <li class="relative pb-10">
+                            <div class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-primary"></div>
+                            <div class="relative flex items-start group">
+                                <span class="h-9 flex items-center">
+                                    <span class="relative z-10 w-8 h-8 flex items-center justify-center bg-primary rounded-full">
+                                        <span class="material-icons-outlined text-white text-sm">check</span>
+                                    </span>
+                                </span>
+                                <span class="ml-4 min-w-0 flex flex-col">
+                                    <span className="text-xs font-semibold tracking-wide uppercase text-primary">Шаг 1</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">Основная информация</span>
+                                </span>
+                            </div>
+                        </li>
+                         <li className="relative pb-10">
+                            <div className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-300 dark:bg-gray-600"></div>
+                            <div class="relative flex items-start group">
+                                <span class="h-9 flex items-center">
+                                    <span class="relative z-10 w-8 h-8 flex items-center justify-center bg-surface-light dark:bg-surface-dark border-2 border-primary rounded-full">
+                                        <span class="h-2.5 w-2.5 bg-primary rounded-full"></span>
+                                    </span>
+                                </span>
+                                <span class="ml-4 min-w-0 flex flex-col">
+                                    <span className="text-xs font-semibold tracking-wide uppercase text-primary">Шаг 2</span>
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">Ввод событий</span>
+                                </span>
+                            </div>
+                        </li>
+                    </ol>
+                 </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <div class="bg-surface-light dark:bg-surface-dark shadow-lg rounded-xl overflow-hidden border border-border-light dark:border-border-dark">
+                <div class="px-6 py-5 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                    <div>
+                        <h2 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Детали расписания</h2>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Вводите события день за днем.</p>
+                    </div>
+                     <div class="flex gap-2">
+                        <button onclick="saveSchedule()" class="inline-flex items-center px-3 py-2 border border-border-light dark:border-border-dark shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none" type="button">
+                            Сохранить
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-8">
+                    <!-- Global Settings -->
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 pb-6 border-b border-border-light dark:border-border-dark">
+                        <div class="sm:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Заголовок</label>
+                            <input type="text" id="scheduleTitle" class="mt-1 flex-1 focus:ring-primary focus:border-primary block w-full min-w-0 rounded-md sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 border" oninput="updateMeta()">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Диапазон дат</label>
+                            <input type="text" id="scheduleRange" class="mt-1 flex-1 focus:ring-primary focus:border-primary block w-full min-w-0 rounded-md sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-2 border" oninput="updateMeta()">
+                        </div>
+                    </div>
+
+                    <!-- Days Container -->
+                    <div id="daysContainer" class="space-y-8"></div>
+
+                    <div class="flex justify-center pt-4">
+                        <button onclick="addDay()" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-gray-800 hover:bg-gray-900 dark:bg-gray-600 dark:hover:bg-gray-500 focus:outline-none transition-colors" type="button">
+                            <span class="material-icons-outlined mr-2">add</span> Добавить новый день
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-border-light dark:border-border-dark flex justify-between items-center">
+                    <a href="index.html" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none">
+                        Назад
+                    </a>
+                    <button onclick="goToPreview()" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none transition-colors" type="button">
+                        Далее: Предпросмотр
+                        <span class="material-icons-outlined ml-2 text-sm">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Inputs -->
+    <input type="file" id="lecturerPhotoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
+
+    <!-- Logic -->
+    <script>
+        // Utilities
+        function escapeHtml(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // State
+        let schedule = {
+            id: 'new',
+            title: 'РАСПИСАНИЕ',
+            dateRange: '',
+            days: []
+        };
+
+        // Pending upload state
+        let pendingUpload = { dIndex: null, lIndex: null };
+
+        // Initialize
+        const urlParams = new URLSearchParams(window.location.search);
+        const scheduleId = urlParams.get('id') || 'new';
+
+        if (scheduleId !== 'new') {
+            const saved = localStorage.getItem(`schedule-${scheduleId}`);
+            if (saved) {
+                schedule = JSON.parse(saved);
+            }
+        } else {
+            schedule.id = Date.now().toString();
+        }
+
+        document.getElementById('scheduleTitle').value = schedule.title;
+        document.getElementById('scheduleRange').value = schedule.dateRange;
+
+        function updateMeta() {
+            schedule.title = document.getElementById('scheduleTitle').value;
+            schedule.dateRange = document.getElementById('scheduleRange').value;
+            saveSchedule();
+        }
+
+        function saveSchedule() {
+            try {
+                localStorage.setItem(`schedule-${schedule.id}`, JSON.stringify(schedule));
+            } catch (e) {
+                alert("Ошибка сохранения: Возможно, изображения слишком большие. Попробуйте меньше фото.");
+                console.error(e);
+            }
+        }
+
+        function goToPreview() {
+            saveSchedule();
+            window.location.href = `preview.html?id=${schedule.id}`;
+        }
+
+        function render() {
+            const container = document.getElementById('daysContainer');
+            container.innerHTML = '';
+
+            schedule.days.forEach((day, dIndex) => {
+                const dayEl = document.createElement('div');
+                dayEl.className = "bg-gray-50 dark:bg-gray-800/30 rounded-lg p-4 border border-border-light dark:border-border-dark relative group transition hover:shadow-md";
+
+                // Header
+                let html = `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="bg-primary/10 dark:bg-primary/20 p-2 rounded-md">
+                                <span class="material-icons-outlined text-primary">calendar_today</span>
+                            </div>
+                            <input
+                                value="${escapeHtml(day.title)}"
+                                oninput="updateDayTitle(${dIndex}, this.value)"
+                                class="text-lg font-bold text-primary uppercase bg-transparent border-b border-transparent hover:border-primary/30 focus:border-primary focus:ring-0 p-0 w-full sm:w-auto transition-colors"
+                                placeholder="ЗАГОЛОВОК ДНЯ"
+                            />
+                        </div>
+                        <div class="flex items-center justify-end w-full sm:w-auto">
+                            <span class="mr-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden sm:inline">Режим:</span>
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-1 flex border border-gray-200 dark:border-gray-600">
+                                <button onclick="setMode(${dIndex}, 'list')" class="px-3 py-1 text-xs font-medium rounded-md transition-all ${day.layoutMode === 'list' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-50'}">Списком</button>
+                                <button onclick="setMode(${dIndex}, 'columns')" class="px-3 py-1 text-xs font-medium rounded-md transition-all ${day.layoutMode === 'columns' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-50'}">В 2 колонки</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Content
+                if (day.layoutMode === 'list') {
+                    html += `<div class="space-y-4">`;
+                    day.lessons.forEach((l, lIndex) => {
+                        html += renderLessonCard(dIndex, lIndex, l);
+                    });
+                    html += `
+                        <button onclick="addLesson(${dIndex}, null)" class="relative block w-full border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg p-4 text-center hover:border-primary focus:outline-none transition group">
+                            <span class="material-icons-outlined mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 group-hover:text-primary">add_circle_outline</span>
+                            <span class="mt-1 block text-sm font-medium text-gray-500 dark:text-gray-400 group-hover:text-primary">Добавить событие</span>
+                        </button>
+                    </div>`;
+                } else {
+                    html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="space-y-4 border-r-0 lg:border-r border-dashed border-gray-300 dark:border-gray-600 pr-0 lg:pr-4">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 text-center">Левая колонка</h4>
+                            ${day.lessons.map((l, lIndex) => l.column === 'left' ? renderLessonCard(dIndex, lIndex, l, true) : '').join('')}
+                            <button onclick="addLesson(${dIndex}, 'left')" class="w-full py-2 border border-dashed border-gray-300 dark:border-gray-500 rounded text-xs text-gray-500 hover:bg-gray-50 transition-colors">+ Добавить в левую</button>
+                        </div>
+                        <div class="space-y-4 pl-0 lg:pl-4">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 text-center">Правая колонка</h4>
+                            ${day.lessons.map((l, lIndex) => l.column === 'right' ? renderLessonCard(dIndex, lIndex, l, true) : '').join('')}
+                            <button onclick="addLesson(${dIndex}, 'right')" class="w-full py-2 border border-dashed border-gray-300 dark:border-gray-500 rounded text-xs text-gray-500 hover:bg-gray-50 transition-colors">+ Добавить в правую</button>
+                        </div>
+                    </div>`;
+                }
+
+                dayEl.innerHTML = html;
+                container.appendChild(dayEl);
+            });
+        }
+
+        function renderLessonCard(dIndex, lIndex, lesson, compact = false) {
+            return `
+            <div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-600 rounded-lg p-3 shadow-sm flex flex-col gap-2">
+                 <div class="flex justify-between items-start gap-2">
+                     <div class="flex-1 grid grid-cols-1 gap-2">
+                         <div class="flex gap-2">
+                             <div class="w-16">
+                                 <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Время</label>
+                                 <input value="${escapeHtml(lesson.time)}" oninput="updateLesson(${dIndex}, ${lIndex}, 'time', this.value)" class="block w-full text-xs border-gray-300 dark:border-gray-600 rounded-md p-1 bg-transparent border dark:text-white"/>
+                             </div>
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Название</label>
+                                 <input value="${escapeHtml(lesson.title)}" oninput="updateLesson(${dIndex}, ${lIndex}, 'title', this.value)" class="block w-full text-xs font-bold border-gray-300 dark:border-gray-600 rounded-md p-1 bg-transparent border dark:text-white"/>
+                             </div>
+                         </div>
+                         <div>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                ${lesson.lecturers.map((lec, lecIdx) => `
+                                    <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-full pr-2 border border-gray-200 dark:border-gray-600">
+                                        <img src="${escapeHtml(lec.photoUrl)}" class="w-5 h-5 rounded-full object-cover" />
+                                        <span class="text-[10px] dark:text-gray-200">${escapeHtml(lec.name)}</span>
+                                        <button onclick="removeLecturer(${dIndex}, ${lIndex}, ${lecIdx})" class="text-gray-400 hover:text-red-500 text-[10px] ml-1">✕</button>
+                                    </div>
+                                `).join('')}
+                                ${lesson.lecturers.length < 4 ? `
+                                    <button onclick="triggerLecturerUpload(${dIndex}, ${lIndex})" class="text-primary text-[10px] hover:underline flex items-center gap-1">
+                                        <span class="material-icons-outlined text-[12px]">add_photo_alternate</span> Лектор
+                                    </button>
+                                ` : ''}
+                            </div>
+                         </div>
+                     </div>
+                     <button onclick="deleteLesson(${dIndex}, ${lIndex})" class="text-gray-400 hover:text-red-500 p-1"><span class="material-icons-outlined text-sm">delete</span></button>
+                 </div>
+            </div>`;
+        }
+
+        // Actions
+        function addDay() {
+            schedule.days.push({ title: 'НОВЫЙ ДЕНЬ', layoutMode: 'list', lessons: [] });
+            saveSchedule();
+            render();
+        }
+
+        function updateDayTitle(dIndex, val) {
+            schedule.days[dIndex].title = val;
+            saveSchedule();
+        }
+
+        function setMode(dIndex, mode) {
+            schedule.days[dIndex].layoutMode = mode;
+            if (mode === 'columns') {
+                schedule.days[dIndex].lessons.forEach(l => { if(!l.column) l.column = 'left'; });
+            }
+            saveSchedule();
+            render();
+        }
+
+        function addLesson(dIndex, column) {
+            schedule.days[dIndex].lessons.push({
+                time: '19:00',
+                title: 'Новый урок',
+                lecturers: [],
+                column: column
+            });
+            saveSchedule();
+            render();
+        }
+
+        function updateLesson(dIndex, lIndex, field, val) {
+            schedule.days[dIndex].lessons[lIndex][field] = val;
+            saveSchedule();
+        }
+
+        function deleteLesson(dIndex, lIndex) {
+            schedule.days[dIndex].lessons.splice(lIndex, 1);
+            saveSchedule();
+            render();
+        }
+
+        function removeLecturer(dIndex, lIndex, lecIdx) {
+            schedule.days[dIndex].lessons[lIndex].lecturers.splice(lecIdx, 1);
+            saveSchedule();
+            render();
+        }
+
+        // Image Upload Logic
+        function triggerLecturerUpload(dIndex, lIndex) {
+            pendingUpload = { dIndex, lIndex };
+            document.getElementById('lecturerPhotoInput').click();
+        }
+
+        function handlePhotoUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        // Resize to thumbnail size
+                        const maxSize = 150;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height *= maxSize / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width *= maxSize / height;
+                                height = maxSize;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                        const name = prompt("Введите имя лектора:");
+                        if (name) {
+                            schedule.days[pendingUpload.dIndex].lessons[pendingUpload.lIndex].lecturers.push({
+                                name,
+                                photoUrl: dataUrl
+                            });
+                            saveSchedule();
+                            render();
+                        }
+
+                        // Reset input
+                        input.value = '';
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>

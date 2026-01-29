@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Экспорт расписания</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&amp;family=Roboto:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#7C3AED",
+                        "primary-dark": "#6D28D9",
+                        "accent-pink": "#E856CA",
+                        "accent-blue": "#3B82F6",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                        "card-light": "#FFFFFF",
+                        "card-dark": "#1E293B",
+                        "text-light": "#334155",
+                        "text-dark": "#E2E8F0",
+                    },
+                    fontFamily: {
+                        display: ["Oswald", "sans-serif"],
+                        body: ["Roboto", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body antialiased min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-card-light dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <span class="material-icons text-primary text-3xl">event_note</span>
+                        <span class="font-display font-bold text-2xl tracking-tight text-gray-900 dark:text-white">OLAMI<span class="text-primary">GEN</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate font-display uppercase tracking-wide">
+                    Экспорт расписания
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Проверьте созданное расписание и скачайте его.
+                </p>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4 gap-3">
+                <button onclick="goBack()" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-card-dark hover:bg-gray-50 focus:outline-none">
+                    Назад к правкам
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+            <!-- Preview Column -->
+            <div class="lg:col-span-8 flex flex-col gap-4">
+                 <div class="bg-card-light dark:bg-card-dark rounded-xl shadow-soft overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[600px] items-center justify-center p-8 bg-gray-100 dark:bg-gray-900 relative overflow-auto">
+                    <!-- Preview Scaler -->
+                    <div id="previewWrapper" class="relative shadow-2xl bg-white flex-shrink-0 origin-top-left">
+                         <div id="renderer" class="bg-white text-black overflow-hidden relative flex flex-col font-body">
+                             <!-- Dynamic Content -->
+                         </div>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <div class="bg-card-light dark:bg-card-dark rounded-xl shadow-soft p-6 border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-icons text-primary">aspect_ratio</span>
+                        Выбор формата
+                    </h3>
+                    <div class="space-y-4">
+                        <button onclick="setFormat('stories')" id="btn-stories" class="w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-icons text-gray-500">crop_portrait</span>
+                                    <div>
+                                        <p class="font-medium text-gray-900 dark:text-white">Формат сторис (9:16)</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">For Instagram</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="setFormat('square')" id="btn-square" class="w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-icons text-gray-500">crop_square</span>
+                                    <div>
+                                        <p class="font-medium text-gray-900 dark:text-white">Квадратный (1:1)</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">For Feed</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                        <button onclick="setFormat('landscape')" id="btn-landscape" class="w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left">
+                             <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-icons text-gray-500">crop_landscape</span>
+                                    <div>
+                                        <p class="font-medium text-gray-900 dark:text-white">Горизонтальный (16:9)</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">For Screens</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="downloadPDF()" class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none transition-colors">
+                        <span class="material-icons">picture_as_pdf</span> Скачать PDF
+                    </button>
+                    <button onclick="downloadPNG()" class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none transition-colors">
+                        <span class="material-icons">image</span> Скачать PNG
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const scheduleId = urlParams.get('id');
+        let schedule = null;
+        let currentFormat = 'stories';
+
+        // Load data
+        if (scheduleId) {
+            const saved = localStorage.getItem(`schedule-${scheduleId}`);
+            if (saved) schedule = JSON.parse(saved);
+        }
+
+        function goBack() {
+            window.location.href = `editor.html?id=${scheduleId || 'new'}`;
+        }
+
+        function setFormat(fmt) {
+            currentFormat = fmt;
+            updateFormatUI();
+            renderSchedule();
+        }
+
+        function updateFormatUI() {
+            ['stories', 'square', 'landscape'].forEach(f => {
+                const btn = document.getElementById(`btn-${f}`);
+                if (f === currentFormat) {
+                    btn.className = "w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left border-2 border-primary bg-primary/5 dark:bg-primary/10";
+                } else {
+                    btn.className = "w-full relative rounded-lg border p-4 cursor-pointer transition-all text-left border-gray-200 dark:border-gray-700 hover:border-gray-300";
+                }
+            });
+        }
+
+        function renderSchedule() {
+            const renderer = document.getElementById('renderer');
+            const wrapper = document.getElementById('previewWrapper');
+
+            if (!schedule) {
+                renderer.innerHTML = '<div class="p-10">Ошибка: Расписание не найдено</div>';
+                return;
+            }
+
+            // Dimensions
+            const dims = {
+                square: { w: 1080, h: 1080 },
+                stories: { w: 1080, h: 1920 },
+                landscape: { w: 1920, h: 1080 }
+            };
+            const { w, h } = dims[currentFormat];
+
+            // Apply size
+            renderer.style.width = `${w}px`;
+            renderer.style.height = `${h}px`;
+
+            // Wrapper Scaling for Preview
+            const previewWidth = 500;
+            const scale = previewWidth / w;
+            wrapper.style.width = `${previewWidth}px`;
+            wrapper.style.height = `${h * scale}px`;
+            renderer.style.transform = `scale(${scale})`;
+            renderer.style.transformOrigin = 'top left';
+
+            // Generate HTML
+            let html = `
+                <div class="text-center pt-12 pb-6 px-10">
+                     <h1 class="text-primary font-display font-bold text-6xl uppercase tracking-tighter leading-none mb-2 break-words">
+                        ${schedule.title}
+                     </h1>
+                </div>
+                <div class="flex-grow px-10 pb-10 flex flex-col gap-8">
+            `;
+
+            schedule.days.forEach(day => {
+                html += `<div>
+                    <div class="border-b-4 border-primary mb-6">
+                        <h2 class="text-primary font-display font-bold text-4xl uppercase tracking-wide">${day.title}</h2>
+                    </div>`;
+
+                if (day.layoutMode === 'list') {
+                    html += `<div class="flex flex-col gap-8">
+                        ${day.lessons.map(l => renderLesson(l)).join('')}
+                    </div>`;
+                } else {
+                    html += `<div class="flex gap-8 relative">
+                        <div class="w-1/2 flex flex-col gap-8 border-r-2 border-dotted border-gray-300 pr-4">
+                            ${day.lessons.filter(l => l.column === 'left').map(l => renderLesson(l)).join('')}
+                        </div>
+                        <div class="w-1/2 flex flex-col gap-8 pl-4">
+                             ${day.lessons.filter(l => l.column === 'right').map(l => renderLesson(l)).join('')}
+                        </div>
+                    </div>`;
+                }
+                html += `</div>`;
+            });
+
+            html += `</div>
+                <div class="bg-black text-white p-8 mt-auto">
+                     <div class="flex items-center justify-center mb-4">
+                         <div class="bg-primary text-white rounded-full px-8 py-3 font-bold text-2xl uppercase">
+                             Регистрация: olami.moscow/afisha
+                         </div>
+                     </div>
+                     <div class="flex items-center justify-center text-center gap-4 mb-6">
+                         <span class="material-icons text-primary transform rotate-45 text-3xl">flight</span>
+                         <p class="text-xl text-gray-300">Грант на поездку за границу при<br/>посещаемости не менее 90% занятий</p>
+                         <span class="material-icons text-primary transform -rotate-45 text-3xl">flight</span>
+                     </div>
+                     <div class="flex items-center justify-between border-t border-gray-700 pt-4">
+                         <div class="flex items-center gap-2">
+                             <span class="font-display font-bold text-3xl">OLAMI MOSCOW</span>
+                         </div>
+                         <div class="text-sm text-gray-400 text-right leading-tight">
+                             Доп. информация по WhatsApp +7(963) 613-3-613<br/>
+                             МЕСТНАЯ РЕЛИГИОЗНАЯ ОРГАНИЗАЦИЯ
+                         </div>
+                     </div>
+                </div>
+            `;
+
+            renderer.innerHTML = html;
+        }
+
+        function renderLesson(lesson) {
+            let avatarHtml = '';
+            if (lesson.lecturers.length === 0) {
+                avatarHtml = `<div class="w-20 h-20 rounded-full bg-gray-200 border-4 border-lime-400 flex items-center justify-center">
+                    <span class="material-icons text-gray-400 text-3xl">person</span>
+                </div>`;
+            } else if (lesson.lecturers.length === 1) {
+                avatarHtml = `<div class="w-20 h-20 rounded-full overflow-hidden border-4 border-lime-400">
+                    <img src="${lesson.lecturers[0].photoUrl}" class="w-full h-full object-cover" crossorigin="anonymous"/>
+                </div>`;
+            } else {
+                avatarHtml = `<div class="grid grid-cols-2 gap-1 w-20">
+                    ${lesson.lecturers.slice(0, 4).map(l => `<img src="${l.photoUrl}" class="w-9 h-9 rounded-full border-2 border-lime-400 object-cover aspect-square" crossorigin="anonymous"/>`).join('')}
+                </div>`;
+            }
+
+            return `
+                <div class="flex gap-4 items-start w-full">
+                    <div class="flex-shrink-0">${avatarHtml}</div>
+                    <div class="flex-grow min-w-0">
+                         <div class="flex justify-between items-start">
+                            <span class="font-bold text-black text-3xl leading-none">${lesson.time}</span>
+                         </div>
+                         <p class="font-bold text-black leading-tight text-2xl mb-1 mt-1 break-words">${lesson.title}</p>
+                         <p class="text-gray-600 text-xl">${lesson.lecturers.map(l => l.name).join(', ')}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function downloadPNG() {
+            const renderer = document.getElementById('renderer');
+            try {
+                // Temporarily remove scale for clear capture
+                const oldTransform = renderer.style.transform;
+                renderer.style.transform = 'none';
+
+                const canvas = await html2canvas(renderer, {
+                    useCORS: true,
+                    scale: 1,
+                    backgroundColor: '#ffffff',
+                    windowWidth: renderer.scrollWidth,
+                    windowHeight: renderer.scrollHeight
+                });
+
+                // Restore preview scale
+                renderer.style.transform = oldTransform;
+
+                const link = document.createElement('a');
+                link.download = `schedule-${currentFormat}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch (e) {
+                console.error(e);
+                alert('Error generating PNG');
+            }
+        }
+
+        async function downloadPDF() {
+            const renderer = document.getElementById('renderer');
+            try {
+                const oldTransform = renderer.style.transform;
+                renderer.style.transform = 'none';
+
+                const canvas = await html2canvas(renderer, {
+                    useCORS: true,
+                    scale: 1,
+                    backgroundColor: '#ffffff'
+                });
+
+                renderer.style.transform = oldTransform;
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: currentFormat === 'landscape' ? 'l' : 'p',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`schedule-${currentFormat}.pdf`);
+            } catch (e) {
+                console.error(e);
+                alert('Error generating PDF');
+            }
+        }
+
+        // Init
+        updateFormatUI();
+        renderSchedule();
+
+    </script>
+</body>
+</html>
