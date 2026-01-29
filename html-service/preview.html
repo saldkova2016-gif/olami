@@ -15,9 +15,10 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#7C3AED",
-                        "primary-dark": "#6D28D9",
-                        "accent-pink": "#E856CA",
+                        primary: "#6A35FF",
+                        "primary-dark": "#5B21E6",
+                        "accent-lime": "#A3E635",
+                        "accent-pink": "#F472B6",
                         "accent-blue": "#3B82F6",
                         "background-light": "#F8FAFC",
                         "background-dark": "#0F172A",
@@ -188,7 +189,7 @@
 
             // Apply size
             renderer.style.width = `${w}px`;
-            renderer.style.height = `${h}px`;
+            renderer.style.height = `${h}px`; // Fixed height
 
             // Wrapper Scaling for Preview
             const previewWidth = 500;
@@ -200,12 +201,13 @@
 
             // Generate HTML
             let html = `
-                <div class="text-center pt-12 pb-6 px-10">
-                     <h1 class="text-primary font-display font-bold text-6xl uppercase tracking-tighter leading-none mb-2 break-words">
-                        ${schedule.title}
-                     </h1>
-                </div>
-                <div class="flex-grow px-10 pb-10 flex flex-col gap-8">
+                <div class="flex flex-col h-full bg-white">
+                    <div class="text-center pt-10 pb-4 px-10 flex-shrink-0">
+                         <h1 class="text-primary font-display font-bold text-6xl uppercase tracking-tighter leading-none mb-2 break-words">
+                            ${schedule.title}
+                         </h1>
+                    </div>
+                    <div class="flex-grow px-10 pb-6 flex flex-col gap-6 overflow-hidden">
             `;
 
             schedule.days.forEach(day => {
@@ -215,15 +217,17 @@
                     </div>`;
 
                 if (day.layoutMode === 'list') {
-                    html += `<div class="flex flex-col gap-8">
+                    html += `<div class="flex flex-col gap-6">
                         ${day.lessons.map(l => renderLesson(l)).join('')}
                     </div>`;
                 } else {
-                    html += `<div class="flex gap-8 relative">
-                        <div class="w-1/2 flex flex-col gap-8 border-r-2 border-dotted border-gray-300 pr-4">
+                    html += `<div class="flex gap-8 relative items-start">
+                        <div class="w-1/2 flex flex-col gap-6 border-r-2 border-dotted border-gray-300 pr-4">
+                            <h3 class="text-primary font-display font-bold text-2xl uppercase border-b-2 border-primary pb-1 mb-2 inline-block self-start">${day.leftTitle || 'ЗАНЯТИЯ ДЛЯ ДЕВУШЕК'}</h3>
                             ${day.lessons.filter(l => l.column === 'left').map(l => renderLesson(l)).join('')}
                         </div>
-                        <div class="w-1/2 flex flex-col gap-8 pl-4">
+                        <div class="w-1/2 flex flex-col gap-6 pl-4">
+                             <h3 class="text-primary font-display font-bold text-2xl uppercase border-b-2 border-primary pb-1 mb-2 inline-block self-start">${day.rightTitle || 'ЗАНЯТИЯ ДЛЯ ЮНОШЕЙ'}</h3>
                              ${day.lessons.filter(l => l.column === 'right').map(l => renderLesson(l)).join('')}
                         </div>
                     </div>`;
@@ -231,58 +235,89 @@
                 html += `</div>`;
             });
 
+            // Footer (Fixed at bottom)
             html += `</div>
-                <div class="bg-black text-white p-8 mt-auto">
+                <div class="bg-black text-white p-6 mt-auto flex-shrink-0">
                      <div class="flex items-center justify-center mb-4">
-                         <div class="bg-primary text-white rounded-full px-8 py-3 font-bold text-2xl uppercase">
+                         <div class="bg-primary text-white rounded-full px-6 py-2 font-display font-bold text-xl uppercase tracking-wide">
                              Регистрация: olami.moscow/afisha
                          </div>
                      </div>
-                     <div class="flex items-center justify-center text-center gap-4 mb-6">
-                         <span class="material-icons text-primary transform rotate-45 text-3xl">flight</span>
-                         <p class="text-xl text-gray-300">Грант на поездку за границу при<br/>посещаемости не менее 90% занятий</p>
-                         <span class="material-icons text-primary transform -rotate-45 text-3xl">flight</span>
+                     <div class="flex items-center justify-center text-center gap-4 mb-4">
+                         <span class="material-icons text-primary transform rotate-45 text-2xl">flight</span>
+                         <p class="text-lg font-body text-gray-300 leading-tight">Грант на поездку за границу при<br/>посещаемости не менее 90% занятий</p>
+                         <span class="material-icons text-primary transform -rotate-45 text-2xl">flight</span>
                      </div>
-                     <div class="flex items-center justify-between border-t border-gray-700 pt-4">
+                     <div class="flex items-center justify-between border-t border-gray-800 pt-4">
                          <div class="flex items-center gap-2">
-                             <span class="font-display font-bold text-3xl">OLAMI MOSCOW</span>
+                             <span class="font-display font-bold text-3xl tracking-tight">OLAMI MOSCOW</span>
                          </div>
-                         <div class="text-sm text-gray-400 text-right leading-tight">
-                             Доп. информация по WhatsApp +7(963) 613-3-613<br/>
+                         <div class="text-sm text-gray-400 text-right leading-tight font-body">
+                             <div class="flex items-center justify-end gap-1 mb-1">
+                                <span class="material-icons text-sm text-green-500">whatsapp</span>
+                                <span>+7(963) 613-3-613</span>
+                             </div>
+                             Набережная Академика Туполева 3, м.Курская<br/>
                              МЕСТНАЯ РЕЛИГИОЗНАЯ ОРГАНИЗАЦИЯ
                          </div>
                      </div>
                 </div>
-            `;
+            </div>`; // End of flex column
 
             renderer.innerHTML = html;
         }
 
         function renderLesson(lesson) {
             let avatarHtml = '';
+            const borderClass = 'border-4 border-accent-lime';
+            const borderClassMini = 'border-2 border-accent-lime';
+
             if (lesson.lecturers.length === 0) {
-                avatarHtml = `<div class="w-20 h-20 rounded-full bg-gray-200 border-4 border-lime-400 flex items-center justify-center">
+                avatarHtml = `<div class="w-20 h-20 rounded-full bg-gray-200 ${borderClass} flex items-center justify-center">
                     <span class="material-icons text-gray-400 text-3xl">person</span>
                 </div>`;
             } else if (lesson.lecturers.length === 1) {
-                avatarHtml = `<div class="w-20 h-20 rounded-full overflow-hidden border-4 border-lime-400">
+                avatarHtml = `<div class="w-20 h-20 rounded-full overflow-hidden ${borderClass}">
                     <img src="${lesson.lecturers[0].photoUrl}" class="w-full h-full object-cover" crossorigin="anonymous"/>
                 </div>`;
             } else {
                 avatarHtml = `<div class="grid grid-cols-2 gap-1 w-20">
-                    ${lesson.lecturers.slice(0, 4).map(l => `<img src="${l.photoUrl}" class="w-9 h-9 rounded-full border-2 border-lime-400 object-cover aspect-square" crossorigin="anonymous"/>`).join('')}
+                    ${lesson.lecturers.slice(0, 4).map(l => `<img src="${l.photoUrl}" class="w-9 h-9 rounded-full ${borderClassMini} object-cover aspect-square" crossorigin="anonymous"/>`).join('')}
                 </div>`;
             }
 
+            // Tag Logic
+            let tagHtml = '';
+            if (lesson.tag && lesson.tag !== 'none') {
+                let tagColor = 'bg-gray-500';
+                let tagText = '';
+                if (lesson.tag === 'girls') {
+                    tagColor = 'bg-accent-pink';
+                    tagText = 'Только для девушек';
+                } else if (lesson.tag === 'boys') {
+                    tagColor = 'bg-accent-blue';
+                    tagText = 'Только для юношей';
+                } else if (lesson.tag === 'general') {
+                    tagColor = 'bg-primary';
+                    tagText = 'Общий урок';
+                }
+                tagHtml = `<span class="${tagColor} text-white text-[12px] font-display font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm whitespace-nowrap self-start">${tagText}</span>`;
+            }
+
+            // Subtitle
+            const subtitleHtml = lesson.subtitle ? `<p class="text-gray-500 text-lg leading-tight mb-1 font-medium italic">${lesson.subtitle}</p>` : '';
+
             return `
-                <div class="flex gap-4 items-start w-full">
-                    <div class="flex-shrink-0">${avatarHtml}</div>
-                    <div class="flex-grow min-w-0">
-                         <div class="flex justify-between items-start">
-                            <span class="font-bold text-black text-3xl leading-none">${lesson.time}</span>
+                <div class="flex gap-4 items-start w-full relative group">
+                    <div class="flex-shrink-0 pt-1">${avatarHtml}</div>
+                    <div class="flex-grow min-w-0 flex flex-col">
+                         <div class="flex justify-between items-start w-full mb-1">
+                            <span class="font-display font-bold text-primary text-3xl leading-none">${lesson.time}</span>
+                            ${tagHtml}
                          </div>
-                         <p class="font-bold text-black leading-tight text-2xl mb-1 mt-1 break-words">${lesson.title}</p>
-                         <p class="text-gray-600 text-xl">${lesson.lecturers.map(l => l.name).join(', ')}</p>
+                         <h3 class="font-display font-bold text-black uppercase leading-tight text-2xl mb-1 break-words">${lesson.title}</h3>
+                         ${subtitleHtml}
+                         <p class="text-gray-900 text-lg font-bold">${lesson.lecturers.map(l => l.name).join(', ')}</p>
                     </div>
                 </div>
             `;
