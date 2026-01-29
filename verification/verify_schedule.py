@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 
 def verify(page):
     cwd = os.getcwd()
-    editor_path = f"file://{cwd}/html-service/editor.html"
+    editor_path = f"file://{cwd}/editor.html"
 
     print(f"Navigating to {editor_path}")
     page.goto(editor_path)
