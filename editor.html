@@ -252,12 +252,12 @@
                 } else {
                     html += `<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div class="space-y-4 border-r-0 lg:border-r border-dashed border-gray-300 dark:border-gray-600 pr-0 lg:pr-4">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 text-center">Левая колонка</h4>
+                            <input value="${escapeHtml(day.leftTitle || 'ЗАНЯТИЯ ДЛЯ ДЕВУШЕК')}" oninput="updateColumnTitle(${dIndex}, 'left', this.value)" class="w-full text-xs font-bold text-gray-400 uppercase mb-2 text-center bg-transparent border-b border-transparent focus:border-primary text-center placeholder-gray-300"/>
                             ${day.lessons.map((l, lIndex) => l.column === 'left' ? renderLessonCard(dIndex, lIndex, l, true) : '').join('')}
                             <button onclick="addLesson(${dIndex}, 'left')" class="w-full py-2 border border-dashed border-gray-300 dark:border-gray-500 rounded text-xs text-gray-500 hover:bg-gray-50 transition-colors">+ Добавить в левую</button>
                         </div>
                         <div class="space-y-4 pl-0 lg:pl-4">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 text-center">Правая колонка</h4>
+                            <input value="${escapeHtml(day.rightTitle || 'ЗАНЯТИЯ ДЛЯ ЮНОШЕЙ')}" oninput="updateColumnTitle(${dIndex}, 'right', this.value)" class="w-full text-xs font-bold text-gray-400 uppercase mb-2 text-center bg-transparent border-b border-transparent focus:border-primary text-center placeholder-gray-300"/>
                             ${day.lessons.map((l, lIndex) => l.column === 'right' ? renderLessonCard(dIndex, lIndex, l, true) : '').join('')}
                             <button onclick="addLesson(${dIndex}, 'right')" class="w-full py-2 border border-dashed border-gray-300 dark:border-gray-500 rounded text-xs text-gray-500 hover:bg-gray-50 transition-colors">+ Добавить в правую</button>
                         </div>
@@ -282,6 +282,7 @@
                              <div class="flex-1">
                                  <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Название</label>
                                  <input value="${escapeHtml(lesson.title)}" oninput="updateLesson(${dIndex}, ${lIndex}, 'title', this.value)" class="block w-full text-xs font-bold border-gray-300 dark:border-gray-600 rounded-md p-1 bg-transparent border dark:text-white"/>
+                                 <input value="${escapeHtml(lesson.subtitle || '')}" oninput="updateLesson(${dIndex}, ${lIndex}, 'subtitle', this.value)" placeholder="Подзаголовок" class="block w-full text-[10px] border-gray-300 dark:border-gray-600 rounded-md p-1 bg-transparent border dark:text-white mt-1"/>
                              </div>
                          </div>
                          <div>
@@ -300,6 +301,28 @@
                                 ` : ''}
                             </div>
                          </div>
+
+                         <div class="flex gap-2 mt-1">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Тег</label>
+                                <select onchange="updateLesson(${dIndex}, ${lIndex}, 'tag', this.value)" class="block w-full text-[10px] border-gray-300 dark:border-gray-600 rounded-md p-1 bg-transparent border dark:text-white">
+                                    <option value="none" ${lesson.tag === 'none' ? 'selected' : ''}>Нет</option>
+                                    <option value="girls" ${lesson.tag === 'girls' ? 'selected' : ''}>Девушки</option>
+                                    <option value="boys" ${lesson.tag === 'boys' ? 'selected' : ''}>Юноши</option>
+                                    <option value="general" ${lesson.tag === 'general' ? 'selected' : ''}>Общее</option>
+                                </select>
+                            </div>
+                            ${compact ? `
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Колонка</label>
+                                <select onchange="updateLesson(${dIndex}, ${lIndex}, 'column', this.value); render();" class="block w-full text-[10px] border-gray-300 dark:border-gray-600 rounded-md p-1 bg-transparent border dark:text-white">
+                                    <option value="left" ${lesson.column === 'left' ? 'selected' : ''}>Левая</option>
+                                    <option value="right" ${lesson.column === 'right' ? 'selected' : ''}>Правая</option>
+                                </select>
+                            </div>
+                            ` : ''}
+                         </div>
+
                      </div>
                      <button onclick="deleteLesson(${dIndex}, ${lIndex})" class="text-gray-400 hover:text-red-500 p-1"><span class="material-icons-outlined text-sm">delete</span></button>
                  </div>
@@ -318,10 +341,17 @@
             saveSchedule();
         }
 
+        function updateColumnTitle(dIndex, side, val) {
+            schedule.days[dIndex][side === 'left' ? 'leftTitle' : 'rightTitle'] = val;
+            saveSchedule();
+        }
+
         function setMode(dIndex, mode) {
             schedule.days[dIndex].layoutMode = mode;
             if (mode === 'columns') {
                 schedule.days[dIndex].lessons.forEach(l => { if(!l.column) l.column = 'left'; });
+                if (!schedule.days[dIndex].leftTitle) schedule.days[dIndex].leftTitle = 'ЗАНЯТИЯ ДЛЯ ДЕВУШЕК';
+                if (!schedule.days[dIndex].rightTitle) schedule.days[dIndex].rightTitle = 'ЗАНЯТИЯ ДЛЯ ЮНОШЕЙ';
             }
             saveSchedule();
             render();
@@ -331,6 +361,8 @@
             schedule.days[dIndex].lessons.push({
                 time: '19:00',
                 title: 'Новый урок',
+                subtitle: '',
+                tag: 'none',
                 lecturers: [],
                 column: column
             });
